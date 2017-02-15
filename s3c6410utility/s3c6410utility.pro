@@ -14,9 +14,13 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    logoutput.cpp
+    logoutput.cpp \
+    qsimplethread.cpp \
+    diskmanager.cpp
 
 HEADERS  += mainwindow.h \
-    logoutput.h
+    logoutput.h \
+    qsimplethread.h \
+    diskmanager.h
 
 FORMS    += mainwindow.ui

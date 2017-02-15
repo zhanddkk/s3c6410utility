@@ -2,6 +2,7 @@
 #define LOGOUTPUT_H
 
 #include <QObject>
+#include <QMutex>
 
 typedef enum {
     e_STDOUT = 0,
@@ -23,6 +24,11 @@ signals:
     void send_log_msg(emLogType, QString);
 
 public slots:
+
+private:
+    QMutex stdout_mutex;
+    QMutex stderr_mutex;
+    QMutex warning_mutex;
 };
 
 #endif // LOGOUTPUT_H
