@@ -11,7 +11,9 @@ class QSimpleThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit QSimpleThread(QObject *parent = 0, void *target = NULL, void *args = NULL);
+    explicit QSimpleThread(QObject *parent = 0,
+                           void *target = NULL,
+                           void *args = NULL);
 
     void set_parameters(void *target, void *args);
 

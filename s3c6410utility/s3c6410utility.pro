@@ -24,3 +24,10 @@ HEADERS  += mainwindow.h \
     diskmanager.h
 
 FORMS    += mainwindow.ui
+
+LIBS += -lwbemuuid -lOle32 -lOleAut32
+
+RESOURCES += \
+    resource.qrc
+
+RC_ICONS = ico\MainWin.ico

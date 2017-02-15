@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/image">
+        <file>ico/MainWin.ico</file>
+    </qresource>
+</RCC>

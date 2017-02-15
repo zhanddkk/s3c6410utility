@@ -10,8 +10,16 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(&log, SIGNAL(send_log_msg(emLogType, QString)), this, SLOT(display_log(emLogType, QString)));
-    connect(ui->program_push_button, SIGNAL(clicked(bool)), this, SLOT(slot_program_button_clicked(bool)));
+    connect(&log,
+            SIGNAL(send_log_msg(emLogType, QString)),
+            this,
+            SLOT(display_log(emLogType, QString)));
+    connect(ui->program_push_button,
+            SIGNAL(clicked(bool)),
+            this,
+            SLOT(slot_program_button_clicked(bool)));
+    disk_manager.p_log = &log;
+    disk_manager.search();
 
 }
 
@@ -25,7 +33,9 @@ void MainWindow::display_log(emLogType log_type, QString msg)
     QTextCursor tmp(ui->log_output_text_edit->document());
     QScrollBar *vbar = ui->log_output_text_edit->verticalScrollBar();
 
-    const bool atBottom = ui->log_output_text_edit->isReadOnly() ? vbar->value() >= vbar->maximum() : ui->log_output_text_edit->textCursor().atEnd();
+    const bool atBottom = ui->log_output_text_edit->isReadOnly() ?
+                vbar->value() >= vbar->maximum() :
+                ui->log_output_text_edit->textCursor().atEnd();
 
     tmp.beginEditBlock();
     tmp.movePosition(QTextCursor::End);

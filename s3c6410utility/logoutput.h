@@ -10,6 +10,8 @@ typedef enum {
     e_WARNING,
 }emLogType;
 
+
+
 class LogOutput : public QObject
 {
     Q_OBJECT

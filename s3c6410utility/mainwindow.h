@@ -19,8 +19,8 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    DiskManager disk_manager;
     LogOutput log;
+    DiskManager disk_manager;
 
 public slots:
     void display_log(emLogType log_type, QString msg);
