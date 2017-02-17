@@ -29,7 +29,7 @@ void DiskManager::do_search(void *obj)
             p_this->wmi_close();
         }
     }
-    emit p_this->search_finished(ret);
+    emit p_this->search_finished((bool)ret);
 }
 
 BOOL DiskManager::wmi_run()
@@ -50,8 +50,8 @@ BOOL DiskManager::wmi_run()
         // cout << "Failed to initialize COM library. Error code = 0x"
         //     << hex << hres << endl;
         p_log->stderr_printf(
-                    "Failed to initialize COM library. Error code = 0x%08lX\n",
-                    hres);
+            "Failed to initialize COM library. Error code = 0x%08lX\n",
+            hres);
         return FALSE;                  // Program has failed.
     }
 
@@ -81,8 +81,8 @@ BOOL DiskManager::wmi_run()
         // cout << "Failed to initialize security. Error code = 0x"
         //     << hex << hres << endl;
         p_log->stderr_printf(
-                    "Failed to initialize security. Error code = 0x%08lX\n",
-                    hres);
+            "Failed to initialize security. Error code = 0x%08lX\n",
+            hres);
         CoUninitialize();
         return FALSE;                    // Program has failed.
     }
@@ -104,8 +104,8 @@ BOOL DiskManager::wmi_run()
         //     << " Err code = 0x"
         //     << hex << hres << endl;
         p_log->stderr_printf(
-                    "Failed to create IWbemLocator object. Error code = 0x%08lX\n",
-                    hres);
+            "Failed to create IWbemLocator object. Error code = 0x%08lX\n",
+            hres);
         CoUninitialize();
         return FALSE;                 // Program has failed.
     }
@@ -162,8 +162,8 @@ BOOL DiskManager::wmi_run()
         // cout << "Could not set proxy blanket. Error code = 0x"
         //     << hex << hres << endl;
         p_log->stderr_printf(
-                    "Could not set proxy blanket. Error code = 0x%08lX\n",
-                    hres);
+            "Could not set proxy blanket. Error code = 0x%08lX\n",
+            hres);
         p_svc->Release();
         p_loc->Release();
         CoUninitialize();
@@ -179,6 +179,8 @@ BOOL DiskManager::wmi_getDriveLetters()
 
     // Use the IWbemServices pointer to make requests of WMI.
     // Make requests here:
+#define QYERY_ERROR_MSG "Query for processes failed. Error code = 0x%08lX\n"
+
     HRESULT hres;
     IEnumWbemClassObject* p_enumerator = NULL;
 
@@ -195,8 +197,8 @@ BOOL DiskManager::wmi_getDriveLetters()
         //     << "Error code = 0x"
         //     << hex << hres << endl;
         p_log->stderr_printf(
-                    "Query for processes failed. Error code = 0x%08lX\n",
-                    hres);
+            QYERY_ERROR_MSG,
+            hres);
         p_svc->Release();
         p_loc->Release();
         CoUninitialize();
@@ -219,6 +221,11 @@ BOOL DiskManager::wmi_getDriveLetters()
                     QString::fromStdWString(vt_prop.bstrVal);
             VariantClear(&vt_prop);
 
+            hres = p_cls_obj->Get(_bstr_t(L"MediaType"), 0, &vt_prop, 0, 0);
+            _new_phy_disk.media_type =
+                    QString::fromStdWString(vt_prop.bstrVal);
+            VariantClear(&vt_prop);
+
             hres = p_cls_obj->Get(_bstr_t(L"BytesPerSector"),
                                   0,
                                   &vt_prop,
@@ -229,7 +236,7 @@ BOOL DiskManager::wmi_getDriveLetters()
 
             hres = p_cls_obj->Get(_bstr_t(L"TotalSectors"), 0, &vt_prop, 0, 0);
             _new_phy_disk.total_sectors =
-                    QString::fromStdWString(vt_prop.bstrVal).toLongLong();
+                QString::fromStdWString(vt_prop.bstrVal).toLongLong();
             VariantClear(&vt_prop);
 
             hres = p_cls_obj->Get(_bstr_t(L"DeviceID"), 0, &vt_prop, 0, 0);
@@ -240,7 +247,7 @@ BOOL DiskManager::wmi_getDriveLetters()
             tmp = tmp.substr(4);
 
             wstring wstr_query =
-                    L"Associators of {Win32_DiskDrive.DeviceID='\\\\.\\";
+                L"Associators of {Win32_DiskDrive.DeviceID='\\\\.\\";
             wstr_query += tmp;
             wstr_query += L"'} where AssocClass=Win32_DiskDriveToDiskPartition";
 
@@ -258,9 +265,8 @@ BOOL DiskManager::wmi_getDriveLetters()
                 //     << "Error code = 0x"
                 //     << hex << hres << endl;
                 p_log->stderr_printf(
-                            "Query for processes failed.\
- Error code = 0x%08lX\n",
-                            hres);
+                    QYERY_ERROR_MSG,
+                    hres);
                 p_svc->Release();
                 p_loc->Release();
                 CoUninitialize();
@@ -283,10 +289,10 @@ BOOL DiskManager::wmi_getDriveLetters()
                                            0,
                                            0);
                     wstring wstr_query =
-                            L"Associators of {Win32_DiskPartition.DeviceID='";
+                        L"Associators of {Win32_DiskPartition.DeviceID='";
                     wstr_query += vt_prop1.bstrVal;
                     wstr_query +=
-                            L"'} where AssocClass=Win32_LogicalDiskToPartition";
+                        L"'} where AssocClass=Win32_LogicalDiskToPartition";
 
 
 
@@ -307,9 +313,8 @@ BOOL DiskManager::wmi_getDriveLetters()
                         //     << "Error code = 0x"
                         //     << hex << hres << endl;
                         p_log->stderr_printf(
-                                    "Query for processes failed.\
- Error code = 0x%08lX\n",
-                                    hres);
+                            QYERY_ERROR_MSG,
+                            hres);
                         p_svc->Release();
                         p_loc->Release();
                         CoUninitialize();
@@ -336,8 +341,8 @@ BOOL DiskManager::wmi_getDriveLetters()
 
                             // print result
                             _new_phy_disk.logical_disks. push_back(
-                                        QString::fromStdWString(
-                                            vt_prop2.bstrVal));
+                                QString::fromStdWString(
+                                    vt_prop2.bstrVal));
                             p_log->stdout_printf("%ls : %ls\n",
                                                  vt_prop.bstrVal,
                                                  vt_prop2.bstrVal);
@@ -358,7 +363,7 @@ BOOL DiskManager::wmi_getDriveLetters()
         }
     }
     p_enumerator->Release();
-
+#undef QYERY_ERROR_MSG
     return TRUE;
 }
 
@@ -366,7 +371,7 @@ BOOL DiskManager::wmi_close()
 {
     // Cleanup
     // ========
-
+    // Win32_DiskDrive a;
     p_svc->Release();
     p_loc->Release();
     CoUninitialize();

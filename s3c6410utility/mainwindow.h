@@ -21,10 +21,16 @@ private:
     Ui::MainWindow *ui;
     LogOutput log;
     DiskManager disk_manager;
+    std::list<struct PhysicalDisk *> usb_disks;
+    void register_device_notify();
 
 public slots:
     void display_log(emLogType log_type, QString msg);
     void slot_program_button_clicked(bool);
+    void process_search_result(bool result);
+
+protected:
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result);
 };
 
 #endif // MAINWINDOW_H

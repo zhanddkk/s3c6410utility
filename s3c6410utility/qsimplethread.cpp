@@ -1,6 +1,8 @@
 #include "qsimplethread.h"
 
-QSimpleThread::QSimpleThread(QObject *parent, void *target, void *args) : QThread(parent)
+QSimpleThread::QSimpleThread(QObject *parent,
+                             void *target,
+                             void *args) : QThread(parent)
 {
     set_parameters(target, args);
 }

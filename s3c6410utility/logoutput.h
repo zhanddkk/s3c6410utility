@@ -8,6 +8,7 @@ typedef enum {
     e_STDOUT = 0,
     e_STDERR,
     e_WARNING,
+    e_COMMENT,
 }emLogType;
 
 
@@ -21,6 +22,7 @@ public:
     int stdout_printf(const char *__format, ...);
     int stderr_printf(const char *__format, ...);
     int warning_printf(const char *__format, ...);
+    int comment_printf(const char *__format, ...);
 
 signals:
     void send_log_msg(emLogType, QString);
@@ -31,6 +33,7 @@ private:
     QMutex stdout_mutex;
     QMutex stderr_mutex;
     QMutex warning_mutex;
+    QMutex comment_mutex;
 };
 
 #endif // LOGOUTPUT_H
