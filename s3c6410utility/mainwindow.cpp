@@ -5,6 +5,8 @@
 #include <QColor>
 #include <QFontMetrics>
 #include <dbt.h>
+#include <QMenu>
+#include <QStyleFactory>
 
 static const GUID GUID_DEVINTERFACE_USB_DEVICE =
     {0xA5DCBF10, 0x6530, 0x11D2, {0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED}};
@@ -34,6 +36,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QFontMetrics _font_me(ui->log_output_text_edit->font());
     ui->log_output_text_edit->setTabStopWidth(_font_me.width("    "));
 
+    QMenu *p_menu = ui->log_output_text_edit->createStandardContextMenu();
+    p_menu->addAction("Test");
+
 
     connect(&log,
             SIGNAL(send_log_msg(emLogType, QString)),
@@ -48,14 +53,42 @@ MainWindow::MainWindow(QWidget *parent) :
             this,
             SLOT(process_search_result(bool)));
 
+    connect(ui->log_output_text_edit,
+            SIGNAL(customContextMenuRequested(QPoint)),
+            this,
+            SLOT(slot_log_output_context_menu(QPoint)));
+
     disk_manager.p_log = &log;
     disk_manager.search();
     register_device_notify();
+
+    QStringList list = QStyleFactory::keys();
+
+    for (QString &name : list)
+    {
+        log.stdout_printf("%s\n", name.toStdString().c_str());
+    }
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::slot_log_output_context_menu(const QPoint &pos)
+{
+    Q_UNUSED(pos)
+    QMenu *menu = ui->log_output_text_edit->createStandardContextMenu();
+    menu->addAction(tr("Clear"),
+                    this,
+                    SLOT(clear_log(bool)));
+    menu->exec(QCursor::pos());
+    delete menu;
+}
+
+void MainWindow::clear_log(bool)
+{
+    ui->log_output_text_edit->clear();
 }
 
 void MainWindow::display_log(emLogType log_type, QString msg)
@@ -173,7 +206,7 @@ void MainWindow::process_search_result(bool result)
     }
     else
     {
-        log.stderr_printf("Can\'t find any valid disk in this system.");
+        log.stderr_printf("Can\'t find any valid disk in this system.\n");
     }
 }
 
@@ -181,83 +214,24 @@ bool MainWindow::nativeEvent(const QByteArray &eventType,
                              void *message,
                              long *result)
 {
-    // Q_UNUSED(eventType);
+    Q_UNUSED(eventType);
+    Q_UNUSED(result);
     MSG *p_msg = reinterpret_cast<MSG *>(message);
     if (p_msg->message == WM_DEVICECHANGE)
     {
-        /*
-        HWND hwnd;
-        UINT message;
-        WPARAM wParam;
-        LPARAM lParam;
-        DWORD time;
-        POINT pt;
-        */
         PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR)p_msg->lParam;
-
-        log.stdout_printf("%s: wParam: %08lX lParam: %08lX result: %ld",
-                          QString(eventType).toStdString().c_str(),
-                          p_msg->wParam,
-                          p_msg->lParam,
-                          result);
-        switch (p_msg->wParam)\
+        switch (p_msg->wParam)
         {
         case DBT_DEVICEARRIVAL:
-            // log.stdout_printf("DBT_DEVICEARRIVAL\n");
-            // break;
         case DBT_DEVICEREMOVECOMPLETE:
-            // log.stdout_printf("DBT_DEVICEREMOVECOMPLETE\n");
-            if (lpdb->dbch_devicetype == DBT_DEVTYP_VOLUME)
+            if (lpdb->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
             {
-                PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME)lpdb;
-
-                if (lpdbv->dbcv_flags == 0)
-                {
-                    //StringCchPrintf(szMsg, sizeof(szMsg)/sizeof(szMsg[0]),
-                    //    TEXT("Drive %c: Media has arrived.\n"),
-                    //    FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-                    //MessageBox( hwnd, szMsg, TEXT("WM_DEVICECHANGE"), MB_OK );
-                    log.stdout_printf("USB");
-                }
+                disk_manager.search();
             }
             break;
         default:
-            // log.stdout_printf("\n");
             break;
         }
-        log.stdout_printf("\n");
-
-        /*
-        if(wParam == DBT_DEVICEARRIVAL) //设备激活
-        {
-            PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR)lParam;
-
-            PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME)lpdb;
-
-            char szMsg[80];
-            sprintf (szMsg, "Drive %c: 被装载/n",
-                FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-
-            MessageBox(hWnd, szMsg, "WM_DEVICECHANGE", MB_OK);
-
-        }
-        else if(wParam == DBT_DEVICEREMOVECOMPLETE)
-        {
-            PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR)lParam;
-
-            PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME)lpdb;
-
-            char szMsg[80];
-            sprintf (szMsg, "Drive %c: 被卸载/n",
-                FirstDriveFromMask(lpdbv ->dbcv_unitmask));
-
-            MessageBox(hWnd, szMsg, "WM_DEVICECHANGE", MB_OK);
-        }
-        */
-    }
-    else
-    {
-        // log.stdout_printf("\n");
     }
     return false;
 }

@@ -28,6 +28,8 @@ public slots:
     void display_log(emLogType log_type, QString msg);
     void slot_program_button_clicked(bool);
     void process_search_result(bool result);
+    void slot_log_output_context_menu(const QPoint &pos);
+    void clear_log(bool);
 
 protected:
     bool nativeEvent(const QByteArray &eventType, void *message, long *result);

@@ -10,6 +10,12 @@ DiskManager::DiskManager(QObject *parent) : QObject(parent)
 
 void DiskManager::search()
 {
+    if (rearch_thread.isRunning())
+    {
+        p_log->stderr_printf("The search thread is running!\n");
+        return;
+    }
+    phy_disks.clear();
     rearch_thread.start();
 }
 
@@ -76,7 +82,7 @@ BOOL DiskManager::wmi_run()
 
 
 
-    if (FAILED(hres))
+    if (FAILED(hres) && (RPC_E_TOO_LATE != hres))
     {
         // cout << "Failed to initialize security. Error code = 0x"
         //     << hex << hres << endl;
