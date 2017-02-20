@@ -1,7 +1,5 @@
 #include "logoutput.h"
 
-// Q_DECLARE_METATYPE(emLogType)
-
 LogOutput::LogOutput(QObject *parent) : QObject(parent)
 {
     qRegisterMetaType<emLogType>("emLogType");

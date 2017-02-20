@@ -6,10 +6,13 @@
 #include <QFontMetrics>
 #include <dbt.h>
 #include <QMenu>
-#include <QStyleFactory>
 
-static const GUID GUID_DEVINTERFACE_USB_DEVICE =
-    {0xA5DCBF10, 0x6530, 0x11D2, {0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED}};
+static const GUID GUID_DEVINTERFACE_DISK_DEVICE = {
+    0x53f56307,0xb6bf,0x11d0,
+    {
+        0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b
+    }
+};
 
 void MainWindow::register_device_notify()
 {
@@ -19,7 +22,7 @@ void MainWindow::register_device_notify()
     ZeroMemory( &NotificationFilter, sizeof(NotificationFilter) );
     NotificationFilter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
     NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-    NotificationFilter.dbcc_classguid = GUID_DEVINTERFACE_USB_DEVICE;
+    NotificationFilter.dbcc_classguid = GUID_DEVINTERFACE_DISK_DEVICE;
     hDevNotify = RegisterDeviceNotification((HWND)winId(), &NotificationFilter,
                                             DEVICE_NOTIFY_WINDOW_HANDLE);
 }
@@ -61,13 +64,6 @@ MainWindow::MainWindow(QWidget *parent) :
     disk_manager.p_log = &log;
     disk_manager.search();
     register_device_notify();
-
-    QStringList list = QStyleFactory::keys();
-
-    for (QString &name : list)
-    {
-        log.stdout_printf("%s\n", name.toStdString().c_str());
-    }
 }
 
 MainWindow::~MainWindow()
@@ -169,6 +165,10 @@ void MainWindow::process_search_result(bool result)
             log.stdout_printf("%s\n |->",
                               disk.interface_type.toStdString().c_str());
 
+            log.comment_printf("Media Type     : ");
+            log.stdout_printf("%s\n |->",
+                              disk.media_type.toStdString().c_str());
+
             log.comment_printf("Logic Disks    : ");
             int i = 0;
             for (QString &logic_disk : disk.logical_disks)
@@ -185,7 +185,8 @@ void MainWindow::process_search_result(bool result)
             log.comment_printf("Total sectors  : ");
             log.stdout_printf("%llu\n", disk.total_sectors);
 
-            if (disk.interface_type == "USB" &&
+            if ((disk.interface_type == "USB" ||
+                 disk.interface_type == "SCSI") &&
                 disk.media_type == "Removable Media")
             {
                 usb_disks.push_back(&disk);
