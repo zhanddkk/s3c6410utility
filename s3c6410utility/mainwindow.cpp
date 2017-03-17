@@ -6,6 +6,7 @@
 #include <QFontMetrics>
 #include <dbt.h>
 #include <QMenu>
+#include <QFile>
 
 static const GUID GUID_DEVINTERFACE_DISK_DEVICE = {
     0x53f56307,0xb6bf,0x11d0,
@@ -141,11 +142,37 @@ void MainWindow::display_log(emLogType log_type, QString msg)
 
 void MainWindow::slot_program_button_clicked(bool)
 {
-    static int times = 0;
-    log.comment_printf("--------Times = %d--------\n", times++);
-    log.stdout_printf("This is standard output message!\n");
-    log.stderr_printf("This is error output message!\n");
-    log.warning_printf("This is warning output message!\n");
+//    static int times = 0;
+//    log.comment_printf("--------Times = %d--------\n", times++);
+//    log.stdout_printf("This is standard output message!\n");
+//    log.stderr_printf("This is error output message!\n");
+//    log.warning_printf("This is warning output message!\n");
+    QString disk_id = ui->sd_card_physical_path_combo_box->currentText();
+    if (disk_id.isEmpty())
+        return;
+
+    QFile hdd(disk_id);
+    if (!hdd.open(QIODevice::ReadOnly))
+        return;
+
+    QByteArray d = hdd.read(512);
+        // Linux allows non-512 mutiplies
+
+    hdd.close();
+
+    for (auto &value: d)
+    {
+        log.stdout_printf("%02X ", (uint8_t)value);
+    }
+
+
+//    QFile file("out.bin");
+
+//    if (!file.open(QIODevice::WriteOnly))
+//        return 255;
+
+//    file.write(d);
+//    file.close();
 }
 
 void MainWindow::process_search_result(bool result)
